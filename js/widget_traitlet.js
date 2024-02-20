@@ -12,20 +12,41 @@ async function render({ model, el }) {
   let nv = new Niivue(options);
   nv.attachToCanvas(canvas);
 
-  console.log("volume");
+  console.log("********************");
   console.log(nv.volumes); // this will be []
 
-  function render_volumes() {
-    let new_volumes = model.get("_volumes");
-    console.log(new_volumes);
-    new_volumes.forEach(async (volume_file) => {
-      let image = new NVImage(volume_file.data.buffer, volume_file.name);
-      await nv.addVolume(image);
-    });
+  function only_keep_new_volumes(current_volumes, volumes_widget) {
+    console.log("Filtering for new volumes");
+    console.log(current_volumes);
+    console.log(volumes_widget);
+
+    // Create a Set of names from current_volumes for efficient lookup
+    const currentNames = new Set(current_volumes.map((volume) => volume.name));
+
+    // Filter volumes_widget for volumes whose names are not in the currentNames Set
+    const newVolumes = volumes_widget.filter(
+      (volume) => !currentNames.has(volume.name)
+    );
+
+    // Return the list of new volumes
+    return newVolumes;
   }
 
-  render_volumes(); // initial render
-  // model.on("change:_volumes", render_volumes); //later render
+  async function render_volumes() {
+    let current_volumes = nv.volumes; // [] on first render
+    console.log(current_volumes);
+    let volumes_widget = model.get("_volumes");
+
+    const newVolumes = only_keep_new_volumes(current_volumes, volumes_widget);
+
+    for (let volume_file of newVolumes) {
+      let image = new NVImage(volume_file.data.buffer, volume_file.name);
+      await nv.addVolume(image);
+    }
+  }
+
+  await render_volumes(); // initial render
+  model.on("change:_volumes", render_volumes); //later render
 
   // let image = new NVImage(volume_file.data.buffer, volume_file.name);
   // await nv.addVolume(image);
