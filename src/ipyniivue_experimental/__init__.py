@@ -3,6 +3,7 @@ import pathlib
 
 import anywidget
 import traitlets
+import uuid
 
 
 try:
@@ -29,9 +30,12 @@ class DRAG_MODES(Enum):
 
 
 def file_serializer(instance: pathlib.Path, widget):
-    if instance == None:
+    if instance is None:
         return None
-    return {"name": instance.name, "data": instance.read_bytes()}
+
+    unique_id = uuid.uuid4()  # This generates a random UUID.
+
+    return {"name": instance.name, "data": instance.read_bytes(), "uid": str(unique_id)}
 
 
 class AnyNiivue(anywidget.AnyWidget):
@@ -73,7 +77,6 @@ class AnyNiivue(anywidget.AnyWidget):
 
     def set_drag_mode(self, value):
         self.drag_mode = str(value)
-
 
 
 class AnyNiivueOldSend(anywidget.AnyWidget):
